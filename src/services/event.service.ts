@@ -1,3 +1,5 @@
+import { notifyCustomers } from "../jobs/eventNotification.job.js";
+import { Booking } from "../models/Booking.model.js";
 import { Event, IEvent } from "../models/Event.model.js";
 
 export const createEventService = async (
@@ -38,6 +40,14 @@ export const updateEventService = async (
   Object.assign(event, payload);
 
   await event.save();
+
+  const bookings = await Booking.find({
+    event: eventId,
+  }).populate("customer", "email");
+
+  const customers = bookings.map((booking: any) => booking.customer.email);
+
+  notifyCustomers(eventId, customers);
 
   return event;
 };
